@@ -17,7 +17,17 @@
         "command": "graphql-querygenerator.helloWorld",
         "title": "Hello World"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "Settings",
+      "properties": {
+        "locatedGraphqlServerQueries": {
+          "type": "string",
+          "default": "",
+          "description": "Location for your graphql queries."
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
