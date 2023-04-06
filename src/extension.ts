@@ -56,7 +56,7 @@ async function readFileInWorkspace(fileName: any) {
     const fileContent = await fs.promises.readFile(filePath, "utf-8");
     return fileContent;
   } catch (err) {
-    console.error(`Error reading file ${fileName}: ${err.message}`);
+    console.error(`Error reading file ${fileName}`);
     return null;
   }
 }
