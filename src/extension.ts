@@ -31,9 +31,8 @@ export function activate(context: vscode.ExtensionContext) {
         },
       ];
       const actionType = await vscode.window.showQuickPick(items);
+      await fetchCurrentAvailableQueries();
       if (actionType?.label === "Queries") {
-        const queryPick = vscode.window.showQuickPick(queriesItems);
-        const fileContent = await readFileInWorkspace("graphql/Message.gql");
       }
     }
   );
@@ -44,19 +43,46 @@ export function activate(context: vscode.ExtensionContext) {
 // This method is called when your extension is deactivated
 export function deactivate() {}
 
-async function readFileInWorkspace(fileName: any) {
-  const workspaceFolders = vscode.workspace.workspaceFolders;
-  if (!workspaceFolders || workspaceFolders.length === 0) {
-    // No workspace is open
-    return null;
+async function fetchCurrentAvailableQueries() {
+  const folderPath = vscode.workspace.workspaceFolders + "/graphql";
+  const globPattern = "**/*.gql";
+  const queries: { label: string }[] = [];
+  vscode.workspace.findFiles(globPattern, folderPath).then(
+    (files) => {
+      files.forEach((fileUri) => {
+        vscode.workspace.fs.readFile(fileUri).then(
+          (fileData) => {
+            // Do something with the file data
+            const data = fileData.toString();
+            const query = data.split("Query {")[1].split("}")[0];
+            const queryNames = matchQueryNames(query);
+            console.log("quer", queryNames);
+            queryNames.map((name) => queries.push({ label: name }));
+          },
+          (error) => {
+            console.error(error);
+          }
+        );
+      });
+    },
+    (error) => {
+      console.error(error);
+    }
+  );
+  console.log("queries", queries);
+}
+
+function matchQueryNames(queryString: string) {
+  const regExp = /(?:query|mutation|subscription)?\s*(\w+)\s*\(/g;
+  const matches = [];
+  let match;
+  while ((match = regExp.exec(queryString)) !== null) {
+    if (match.index === regExp.lastIndex) {
+      regExp.lastIndex++;
+    }
+    if (match[1] !== "auth") {
+      matches.push(match[1]);
+    }
   }
-  const workspacePath = workspaceFolders[0].uri.fsPath;
-  const filePath = path.join(workspacePath, fileName);
-  try {
-    const fileContent = await fs.promises.readFile(filePath, "utf-8");
-    return fileContent;
-  } catch (err) {
-    console.error(`Error reading file ${fileName}`);
-    return null;
-  }
+  return matches;
 }
